@@ -5,11 +5,21 @@
     <title>Issuance</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Test get issues">
+
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" type="text/css" href="css/structure.css">
     <link rel="stylesheet" type="text/css" href="css/typography.css">
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=PT+Serif">
-    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!-- <link rel="stylesheet" type="text/css" href="css/prettify.css"> -->
+    <link href='https://fonts.googleapis.com/css?family=PT+Serif:400,400i,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=PT+Sans:700' rel='stylesheet' type='text/css'>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.20.0/themes/prism.min.css" rel="stylesheet" />
+
+
+    <script src="https://buttons.github.io/buttons.js"></script>
 
     <script type="module">
       import { React, ReactDOM } from 'https://unpkg.com/es-react@16.12.0/dev';
@@ -17,17 +27,78 @@
       import { endpoint } from 'https://cdn.skypack.dev/@octokit/endpoint';
       import marked from 'https://unpkg.com/marked@0.8.0/lib/marked.esm.js';
 
-      const html = htm.bind(React.createElement)
+      const html = htm.bind(React.createElement);
 
       const Header = (props) => {
         return html`
           <div className="header">
-            <h1 className="title">
-              <a href="index.html"><strong>issuance</strong></a>
-            </h1>
-            <p className="description">
-              Open, free blogging on <strong>Github pages</strong> with <strong>Github issues</strong>.
-            </p>
+            <a className="logo" href="https://casualjavascript.com">Casual JavaScript</a>
+            <div className="follow">
+              <a className="github-button" href="https://github.com/Gaotianhe/issuance" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star Gaotianhe/issuance on GitHub">Star</a>
+              <br />
+              <a className="github-button" href="https://github.com/Gaotianhe/issuance/subscription" data-icon="octicon-eye" data-size="large" data-show-count="true" aria-label="Watch Gaotianhe/issuance on GitHub">Watch</a>
+            </div>
+          </div>
+        `;
+      }
+
+      const Comments = (props) => {
+        const [comments, setComments] = React.useState();
+        const {
+          search,
+        } = window.location;
+
+        React.useEffect(() => {
+          async function fetchComments() {
+            const issue_number = search.slice(1);
+            if (issue_number && !comments) {
+              const { url, ...options } = endpoint('GET /repos/:owner/:repo/issues/:issue_number/comments', {
+                owner: 'Gaotianhe',
+                repo: 'issuance',
+                issue_number,
+                headers: {
+                  authorization: 'token 9c7de000717038530cb77536c47dc5e96ccca93a',
+                },
+              });
+
+              console.log(options);
+              const res = await fetch(url, options);
+              setComments(await res.json());
+
+              Prism.highlightAll();
+            }
+          }
+
+          fetchComments();
+        }, [search, comments]);
+
+        return html`
+          <div id="comments" className="comments">
+            <h1>Comments</h1>
+            ${(comments || [])
+              .map(({
+                id,
+                user: {
+                  html_url,
+                  login,
+                },
+                created_at,
+                body,
+              }) => html`
+                <div key=${id} className="comment">
+                  <a className="author" href="${html_url}">
+                    ${login}
+                  </a>
+                  <span className="date">
+                    ${'commented '}
+                    ${new Date(created_at).toLocaleDateString()} ${new Date(created_at).toLocaleTimeString()}:
+                  </span>
+                  <div
+                    className="body"
+                    dangerouslySetInnerHTML="${{ __html: marked(body)}}"
+                  />
+                </div>
+              `)}
           </div>
         `;
       }
@@ -38,13 +109,18 @@
         React.useEffect(() => {
           async function fetchIssues() {
             if (!issues) {
-              const { url, ...options } = endpoint("GET /repos/:owner/:repo/issues", {
-                owner: "mateogianolio",
-                repo: "issuance",
-                auth: '<TOKEN>'
+              const { url, ...options } = endpoint('GET /repos/:owner/:repo/issues', {
+                owner: 'Gaotianhe',
+                repo: 'issuance',
+                headers: {
+                  authorization: 'token 9c7de000717038530cb77536c47dc5e96ccca93a',
+                },
               });
+              
               const res = await fetch(url, options);
               setIssues(await res.json());
+
+              Prism.highlightAll();
             }
           }
 
@@ -99,7 +175,7 @@
                     <span>${new Date(created_at).toLocaleDateString()} </span>
                     ${comments
                       ? html`
-                        <a href="?${number}">
+                        <a href="?${number}#comments">
                           ${comments} comment(s)
                         </a>
                       `
@@ -108,13 +184,14 @@
                   </div>
                   <div
                     className="body"
-                    dangerouslySetInnerHTML="${{ __html: marked(body).replace(/<pre>/g, '<pre class="prettyprint">')}}"
+                    dangerouslySetInnerHTML="${{ __html: marked(body)}}"
                   />
+                  <${Comments} />
                 </div>
               `)}
           </div>
-        `
-      }
+        `;
+      };
 
       ReactDOM.render(
         html`
@@ -126,6 +203,8 @@
     </script>
   </head>
   <body>
-    <div id="issuance" />
+    <div id="issuance">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.20.0/components/prism-core.min.js"></script>
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.20.0/plugins/autoloader/prism-autoloader.min.js"></script>
   </body>
 </html>
