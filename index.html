@@ -5,11 +5,13 @@
     <title>Issuance</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Use GitHub issues write blogs">
 
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="css/structure.css">
     <link rel="stylesheet" type="text/css" href="css/typography.css">
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=PT+Serif">
-    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
 
     <script type="module">
       import { React, ReactDOM } from 'https://unpkg.com/es-react@16.12.0/dev';
@@ -32,6 +34,67 @@
         `;
       }
 
+      const Comments = (props) => {
+        const [comments, setComments] = React.useState();
+        const {
+          search,
+        } = window.location;
+
+        React.useEffect(() => {
+          async function fetchComments() {
+            const issue_number = search.slice(1);
+            if (issue_number && !comments) {
+              const { url, ...options } = endpoint('GET /repos/:owner/:repo/issues/:issue_number/comments', {
+                owner: 'Gaotianhe',
+                repo: 'issuance',
+                issue_number,
+                headers: {
+                  authorization: '<TOKEN>',
+                },
+              });
+
+              console.log(options);
+              const res = await fetch(url, options);
+              setComments(await res.json());
+
+              Prism.highlightAll();
+            }
+          }
+
+          fetchComments();
+        }, [search, comments]);
+
+        return html`
+          <div id="comments" className="comments">
+            <h1>Comments</h1>
+            ${(comments || [])
+              .map(({
+                id,
+                user: {
+                  html_url,
+                  login,
+                },
+                created_at,
+                body,
+              }) => html`
+                <div key=${id} className="comment">
+                  <a className="author" href="${html_url}">
+                    ${login}
+                  </a>
+                  <span className="date">
+                    ${'commented '}
+                    ${new Date(created_at).toLocaleDateString()} ${new Date(created_at).toLocaleTimeString()}:
+                  </span>
+                  <div
+                    className="body"
+                    dangerouslySetInnerHTML="${{ __html: marked(body)}}"
+                  />
+                </div>
+              `)}
+          </div>
+        `;
+      }
+
       const Posts = (props) => {
         const [issues, setIssues] = React.useState();
 
@@ -45,6 +108,7 @@
               });
               const res = await fetch(url, options);
               setIssues(await res.json());
+              Prism.highlightAll();
             }
           }
 
@@ -99,7 +163,7 @@
                     <span>${new Date(created_at).toLocaleDateString()} </span>
                     ${comments
                       ? html`
-                        <a href="?${number}">
+                        <a href="?${number}#comments">
                           ${comments} comment(s)
                         </a>
                       `
@@ -108,13 +172,14 @@
                   </div>
                   <div
                     className="body"
-                    dangerouslySetInnerHTML="${{ __html: marked(body).replace(/<pre>/g, '<pre class="prettyprint">')}}"
+                    dangerouslySetInnerHTML="${{ __html: marked(body)}}"
                   />
+                  <${Comments} />
                 </div>
               `)}
           </div>
-        `
-      }
+        `;
+      };
 
       ReactDOM.render(
         html`
@@ -126,6 +191,8 @@
     </script>
   </head>
   <body>
-    <div id="issuance" />
-  </body>
+    <div id="issuance">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.20.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.20.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
 </html>
