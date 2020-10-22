@@ -12,4 +12,4 @@ Link to individual posts by appending `?<issue_number>` to `index.html`.
 
 ### Live examples
 
-* **https://casualjavascript.com**
+* **https://casualjavascript.com** [repo](https://github.com/casualjavascript/blog)
