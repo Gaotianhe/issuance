@@ -45,7 +45,7 @@
             const issue_number = search.slice(1);
             if (issue_number && !comments) {
               const { url, ...options } = endpoint('GET /repos/:owner/:repo/issues/:issue_number/comments', {
-                owner: 'Gaotianhe',
+                owner: 'tianheg',
                 repo: 'issuance',
                 issue_number,
                 headers: {
@@ -102,7 +102,7 @@
           async function fetchIssues() {
             if (!issues) {
               const { url, ...options } = endpoint("GET /repos/:owner/:repo/issues", {
-                owner: "Gaotianhe",
+                owner: "tianheg",
                 repo: "issuance",
                 auth: '<TOKEN>'
               });
@@ -122,7 +122,7 @@
         return html`
           <div className="posts">
             ${(issues || [])
-              .filter(({ user }) => user.login === 'Gaotianhe')
+              .filter(({ user }) => user.login === 'tianheg')
               .filter(({ number }) => !search || Number(search.slice(1)) === number)
               .map(({
                 number,
